@@ -1,0 +1,11 @@
+/node_modules/
+/.expo/
+/dist/
+/android/
+/ios/
+/.pnpm-store/
+/modules/hongguo-source/build/
+/modules/hongguo-source/android/libs/
+/modules/hongguo-source/android/src/main/jniLibs/
+/modules/hongguo-source/ios/HongguoCore.xcframework/
+*.log

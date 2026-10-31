@@ -1,0 +1,27 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'dev.diance.hongguo'
+version = '0.1.0'
+
+android {
+  namespace 'dev.diance.hongguo'
+  defaultConfig {
+    minSdkVersion 24
+    consumerProguardFiles 'consumer-rules.pro'
+  }
+}
+
+dependencies {
+  implementation files('libs/core.jar')
+}
+
+tasks.named('preBuild').configure {
+  doFirst {
+    if (!file('libs/core.jar').exists() || !file('src/main/jniLibs').exists()) {
+      throw new GradleException('Hongguo Go core is missing. Run: node modules/hongguo-source/scripts/build.mjs android')
+    }
+  }
+}

@@ -1,0 +1,5 @@
+build/
+android/libs/core.jar
+android/src/main/jniLibs/
+ios/HongguoCore.xcframework/
+go/anonymous.json

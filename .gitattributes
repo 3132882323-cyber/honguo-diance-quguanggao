@@ -1,0 +1,14 @@
+* text=auto eol=lf
+*.png -text
+*.jpg -text
+*.mp4 -text
+*.m4s -text
+*.jar -text
+*.zip -text
+*.gz -text
+*.woff -text
+*.ttf -text
+
+# Keep the audited module/copy hashes identical across operating systems.
+extensions/shadowrocket/*.sgmodule text eol=lf
+extensions/shadowrocket/*.txt text eol=lf

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "upstream": {
+    "repository": "https://github.com/bluee1111/egern-hongguo-adblock",
+    "commit": "54412489b99934abf4652ee7729cb3e1bdaf3528",
+    "commitDate": "2026-10-09T11:09:01Z",
+    "verifiedDate": "2026-10-31",
+    "sourceFile": "hongguo-adblock.yaml",
+    "sourceBlobSha": "6d6de845eb6a168e69d63609a5423f2414e2edd8",
+    "licenseFile": "LICENSE",
+    "licenseBlobSha": "3ffd94e48368e0413777b1bc0810599321cecadf",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2026 bluee1111"
+  },
+  "conversion": {
+    "date": "2026-10-31",
+    "format": "Egern YAML to Shadowrocket sgmodule",
+    "domainRules": {
+      "source": 14,
+      "converted": 18,
+      "regexesApproximated": 6,
+      "wildcards": 10
+    },
+    "urlRewrites": 3,
+    "mitmHosts": 5,
+    "approximation": "Numeric character classes converted to * / ? host wildcards; slightly wider matches, preserving original domain suffixes.",
+    "validation": "Static structure, regex and sample hostname checks only; no iPhone/Shadowrocket runtime acceptance."
+  },
+  "files": [
+    {
+      "path": "hongguo-shadowrocket.sgmodule",
+      "bytes": 4262,
+      "sha256": "42607865a463b051618d51675986e2b48116625dc469072392fb772b954ff33b"
+    },
+    {
+      "path": "hongguo-shadowrocket-copy.txt",
+      "bytes": 4262,
+      "sha256": "42607865a463b051618d51675986e2b48116625dc469072392fb772b954ff33b"
+    },
+    {
+      "path": "hongguo-shadowrocket-使用说明.txt",
+      "bytes": 2531,
+      "sha256": "dadc29edf8ded7a743f5e54f4ddf3c27f90cd686533cb298edf209e94d827599"
+    }
+  ]
+}

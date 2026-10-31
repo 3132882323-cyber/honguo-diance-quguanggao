@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "honguo-diance-quguanggao",
+    "slug": "honguo-diance-quguanggao",
+    "version": "0.1.0",
+    "scheme": "honguo-diance-quguanggao",
+    "orientation": "default",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "bundleIdentifier": "org.example.honguodiancequguanggao",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "org.example.honguodiancequguanggao"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      "./modules/hongguo-source/app.plugin.js",
+      "expo-status-bar",
+      "expo-sharing",
+      "expo-font"
+    ]
+  }
+}

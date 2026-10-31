@@ -1,0 +1,37 @@
+红果去广告：Egern 转 Shadowrocket 模块
+转换日期：2026-10-31
+
+来源与转换
+原作者 bluee1111，MIT 许可；完整许可证已保留在模块注释中。
+源版本：54412489b99934abf4652ee7729cb3e1bdaf3528
+源文件：https://github.com/bluee1111/egern-hongguo-adblock/blob/54412489b99934abf4652ee7729cb3e1bdaf3528/hongguo-adblock.yaml
+复用 14 条源域名规则、3 条 URL 重写和 5 个 MITM 主机名。
+小火箭版有 18 条域名规则；6 条域名正则转换成 10 条 * / ? 通配规则。
+转换近似而非完全等价：数字字符限制无法逐字保留，匹配范围略宽。
+保留原广告域名后缀，未新增 reading-video 正片拦截规则。
+本文件是静态快照，不会自动更新。
+
+iPhone 安装步骤
+1. 在手机上用文本编辑器打开 hongguo-shadowrocket-copy.txt，全选复制。
+2. 小火箭 → 配置 → 模块 → 新建模块，粘贴完整内容后保存，启用该模块。
+   右上角＋的远程下载框接收网址，不能粘贴电脑文件路径。
+3. 当前使用的配置文件右侧ⓘ → HTTPS 解密，开启 HTTPS 解密。
+4. 证书 → 生成新的 CA 证书 → 安装证书。已有有效且受信任的小火箭证书可沿用。
+5. iPhone 设置 → 已下载描述文件 → 安装，然后设置 → 通用 → 关于本机 → 证书信任设置，为该证书开启完全信任。
+6. 小火箭首页全局路由选择“配置”，开启连接；完全退出红果后重新打开测试。
+
+证书与实际限制
+请在你自己的小火箭中生成证书；模块不附带任何第三方证书或私钥。
+域名规则独立于 HTTPS 解密；3 条 HTTPS URL 重写需要解密及受信任证书。
+hostname 用 %APPEND% 追加原来的 5 个解密域名，会保留其他配置或模块已有域名。
+有证书固定的接口仍可能无法解密；格式转换不能保证去掉全部广告。
+不能模拟看完激励广告或替代服务端解锁。
+如果播放或网络异常，先关闭本模块作对比；不要叠加启用多份红果拦截规则。
+检查通过的是规则结构与样本字符串匹配，未在真实 iPhone/Shadowrocket 导入或实播。
+REJECT-VIDEO 策略依据手册支持列表转换；不同客户端版本仍需真机验证。
+
+参考
+https://github.com/LOWERTOP/Shadowrocket/blob/9ff0cc1564d528b9e77a863b39fc443b08cf98ae/README.md#模块
+https://github.com/LOWERTOP/Shadowrocket/blob/9ff0cc1564d528b9e77a863b39fc443b08cf98ae/README.md#https解密
+https://support.apple.com/zh-cn/102390
+

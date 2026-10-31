@@ -1,0 +1,221 @@
+package aac
+
+import (
+	"fmt"
+	"io"
+
+	"github.com/Eyevinn/mp4ff/bits"
+)
+
+const (
+	// AAClc - AAC-LC Low Complexity
+	AAClc = 2
+	// HEAACv1 - HE-AAC version 1 with SBR
+	HEAACv1 = 5
+	// HEAACv2 - HE-AAC version 2 with SBR and PS
+	HEAACv2 = 29
+)
+
+// AudioSpecificConfig according to ISO/IEC 14496-3
+// Syntax specified in Table 1.15
+type AudioSpecificConfig struct {
+	ObjectType           byte
+	ChannelConfiguration byte // Defined in Table 1.19
+	SamplingFrequency    int
+	ExtensionFrequency   int
+	SBRPresentFlag       bool
+	PSPresentFlag        bool
+}
+
+// FrequencyTable maps frequency index to sample rate in Hz
+var FrequencyTable = map[byte]int{
+	0:  96000,
+	1:  88200,
+	2:  64000,
+	3:  48000,
+	4:  44100,
+	5:  32000,
+	6:  24000,
+	7:  22050,
+	8:  16000,
+	9:  12000,
+	10: 11025,
+	11: 8000,
+	12: 7350,
+}
+
+// ReverseFrequencies converts sample frequency to index
+var ReverseFrequencies = map[int]byte{
+	96000: 0,
+	88200: 1,
+	64000: 2,
+	48000: 3,
+	44100: 4,
+	32000: 5,
+	24000: 6,
+	22050: 7,
+	16000: 8,
+	12000: 9,
+	11025: 10,
+	8000:  11,
+	7350:  12,
+}
+
+// NrChannels returns the number of channels of a channelConfiguration value
+// according to ISO/IEC 14496-3:2019 Table 1.23, or 0 for values without a
+// fixed layout: 0 (layout given by a program_config_element) and the
+// reserved values 8-10 and 15.
+//
+//	1: 1 channel (mono)
+//	2: 2 channels (stereo)
+//	3: 3 channels
+//	4: 4 channels
+//	5: 5 channels
+//	6: 6 channels (5.1)
+//	7: 8 channels (7.1 front)
+//	11: 7 channels (6.1)
+//	12: 8 channels (7.1 back)
+//	13: 24 channels (22.2)
+//	14: 8 channels (7.1 top)
+func NrChannels(channelConfiguration byte) int {
+	switch channelConfiguration {
+	case 1, 2, 3, 4, 5, 6:
+		return int(channelConfiguration)
+	case 7, 12, 14:
+		return 8
+	case 11:
+		return 7
+	case 13:
+		return 24
+	default:
+		return 0
+	}
+}
+
+// AudioSpecificConfigHeader - the leading fields shared by every audio
+// object type in an AudioSpecificConfig (ISO/IEC 14496-3 Table 1.15).
+type AudioSpecificConfigHeader struct {
+	ObjectType           byte
+	ChannelConfiguration byte
+	SamplingFrequency    int
+}
+
+// DecodeAudioSpecificConfigHeader decodes the leading AudioSpecificConfig
+// fields and stops before the object-type-specific payload, so it works for
+// object types that DecodeAudioSpecificConfig does not support. The sampling
+// frequency is the base frequency, without any HE-AAC extension.
+func DecodeAudioSpecificConfigHeader(r io.Reader) (*AudioSpecificConfigHeader, error) {
+	br := bits.NewReader(r)
+	hdr := &AudioSpecificConfigHeader{}
+	objectType := br.Read(5)
+	if objectType == 31 {
+		objectType = 32 + br.Read(6)
+	}
+	hdr.ObjectType = byte(objectType)
+	frequency, ok := getFrequency(br)
+	if !ok {
+		if br.AccError() != nil {
+			return nil, fmt.Errorf("audio specific config too short: %w", br.AccError())
+		}
+		return nil, fmt.Errorf("strange frequency index")
+	}
+	hdr.SamplingFrequency = frequency
+	hdr.ChannelConfiguration = byte(br.Read(4))
+	if br.AccError() != nil {
+		return nil, fmt.Errorf("audio specific config too short: %w", br.AccError())
+	}
+	return hdr, nil
+}
+
+// DecodeAudioSpecificConfig -
+func DecodeAudioSpecificConfig(r io.Reader) (*AudioSpecificConfig, error) {
+	br := bits.NewReader(r)
+
+	asc := &AudioSpecificConfig{}
+	audioObjectType := byte(br.Read(5))
+	asc.ObjectType = audioObjectType
+	switch audioObjectType {
+	case AAClc:
+		// do nothing
+	case HEAACv1:
+		asc.SBRPresentFlag = true
+	case HEAACv2:
+		asc.SBRPresentFlag = true
+		asc.PSPresentFlag = true
+	default:
+		return asc, fmt.Errorf("unsupported object type: %d", audioObjectType)
+	}
+	frequency, ok := getFrequency(br)
+	if !ok {
+		return asc, fmt.Errorf("strange frequency index")
+	}
+	asc.SamplingFrequency = frequency
+	asc.ChannelConfiguration = byte(br.Read(4))
+	switch audioObjectType {
+	case HEAACv1, HEAACv2:
+		extFrequency, ok := getFrequency(br)
+		if !ok {
+			return asc, fmt.Errorf("strange frequency index")
+		}
+		asc.ExtensionFrequency = extFrequency
+		audioObjectType = byte(br.Read(5)) // Shall be set to AAC-LC here again
+	}
+	if audioObjectType != AAClc {
+		return nil, fmt.Errorf("base audioObjectType is %d instead of AAC-LC (2)", audioObjectType)
+	}
+	//GASpecificConfig()
+	_ = br.Read(3) //GASpecificConfig
+	// Done (there may be trailing bits)
+	return asc, nil
+}
+
+// Encode - write AudioSpecificConfig to w for AAC-LC and HE-AAC
+func (a *AudioSpecificConfig) Encode(w io.Writer) error {
+	switch a.ObjectType {
+	case AAClc, HEAACv1, HEAACv2:
+		// fine
+	default:
+		return fmt.Errorf("audioObjectType %d not supported", a.ObjectType)
+	}
+	bw := bits.NewWriter(w)
+	bw.Write(uint(a.ObjectType), 5)
+	samplingIndex, ok := ReverseFrequencies[a.SamplingFrequency]
+	if ok {
+		bw.Write(uint(samplingIndex), 4)
+	} else {
+		bw.Write(0x0f, 4)
+		bw.Write(uint(a.SamplingFrequency), 24)
+	}
+	bw.Write(uint(a.ChannelConfiguration), 4)
+	switch a.ObjectType {
+	case HEAACv1, HEAACv2:
+		samplingIndex, ok := ReverseFrequencies[a.ExtensionFrequency]
+		if ok {
+			bw.Write(uint(samplingIndex), 4)
+		} else {
+			bw.Write(0x0f, 4)
+			bw.Write(uint(a.ExtensionFrequency), 24)
+		}
+		bw.Write(AAClc, 5) // base audioObjectType
+	}
+	bw.Write(0x00, 3) // GASpecificConfig
+	bw.Flush()
+	return bw.AccError()
+}
+
+// getFrequency - either from 4-bit index or 24-bit value
+func getFrequency(br *bits.Reader) (frequency int, ok bool) {
+	frequencyIndex := br.Read(4)
+	if frequencyIndex == 0x0f {
+		f := br.Read(24)
+		if br.AccError() != nil {
+			return 0, false
+		}
+		return int(f), true
+	}
+	if br.AccError() != nil {
+		return 0, false
+	}
+	frequency, ok = FrequencyTable[byte(frequencyIndex)]
+	return frequency, ok
+}

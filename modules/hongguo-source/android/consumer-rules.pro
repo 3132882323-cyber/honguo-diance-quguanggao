@@ -1,0 +1,3 @@
+-keep class go.** { *; }
+-keep class dev.diance.hongguo.core.** { *; }
+-keep class dev.diance.hongguo.HongguoSourceModule { *; }

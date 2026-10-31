@@ -1,0 +1,370 @@
+package mp4_test
+
+import (
+	"bytes"
+	"encoding/hex"
+	"fmt"
+	"testing"
+
+	"github.com/Eyevinn/mp4ff/aac"
+	"github.com/Eyevinn/mp4ff/bits"
+	"github.com/Eyevinn/mp4ff/mp4"
+)
+
+const (
+	avcSPSnalu  = "67640020accac05005bb0169e0000003002000000c9c4c000432380008647c12401cb1c31380"
+	avcPPSnalu  = "68b5df20"
+	hevcVPSnalu = "40010c01ffff022000000300b0000003000003007b18b024"
+	hevcSPSnalu = "420101022000000300b0000003000003007ba0078200887db6718b92448053888892cf24a69272c9124922dc91aa48fca223ff000100016a02020201"
+	hevcPPSnalu = "4401c0252f053240"
+)
+
+func TestCreateInitSegments(t *testing.T) {
+	init, err := createVideoAVCInitSegment()
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "video" {
+		t.Errorf("got %s, wanted video", init.GetMediaType())
+	}
+	init, err = createVideoHEVCInitSegment()
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "video" {
+		t.Errorf("got %s, wanted video", init.GetMediaType())
+	}
+	init, err = createAudioAACInitSegment(48000, aac.AAClc)
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "audio" {
+		t.Errorf("got %s, wanted audio", init.GetMediaType())
+	}
+	init, err = createAudioAACInitSegment(24000, aac.HEAACv1)
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "audio" {
+		t.Errorf("got %s, wanted audio", init.GetMediaType())
+	}
+	init, err = createAudioAACInitSegment(48000, aac.AAClc)
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "audio" {
+		t.Errorf("got %s, wanted audio", init.GetMediaType())
+	}
+	init, err = createAudioAACInitSegment(24000, aac.HEAACv1)
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "audio" {
+		t.Errorf("got %s, wanted audio", init.GetMediaType())
+	}
+	init, err = createAudioAACInitSegment(24000, aac.HEAACv2)
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "audio" {
+		t.Errorf("got %s, wanted audio", init.GetMediaType())
+	}
+
+	init, err = createVideoMJpegInitSegment()
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "video" {
+		t.Errorf("got %s, wanted video", init.GetMediaType())
+	}
+	init, err = createAudioAC3InitSegment()
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "audio" {
+		t.Errorf("got %s, wanted audio", init.GetMediaType())
+	}
+	init, err = createAudioEC3InitSegment()
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "audio" {
+		t.Errorf("got %s, wanted audio", init.GetMediaType())
+	}
+	init, err = createSubtitlesWvttInitSegment()
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "unknown" {
+		t.Errorf("got %s, wanted unknown", init.GetMediaType())
+	}
+	init, err = createSubtitlesStppInitSegment()
+	if err != nil {
+		t.Error(err)
+	}
+	if init.GetMediaType() != "unknown" {
+		t.Errorf("got %s, wanted unknown", init.GetMediaType())
+	}
+}
+
+// TestCreateEmptyTrakHandlerAndMediaHeader checks that the media header of an
+// empty track matches its handler type (ISO/IEC 14496-12 Clause 12), whichever
+// alias is used for the media type.
+func TestCreateEmptyTrakHandlerAndMediaHeader(t *testing.T) {
+	cases := []struct {
+		mediaTypes  []string
+		handlerType string
+		mediaHeader string
+	}{
+		{[]string{"video", "vide"}, "vide", "vmhd"},
+		{[]string{"audio", "soun"}, "soun", "smhd"},
+		{[]string{"subtitle", "subtitles", "subt", "stpp", "clcp"}, "subt", "sthd"},
+		{[]string{"text", "wvtt"}, "text", "nmhd"},
+		{[]string{"meta"}, "meta", "nmhd"},
+		{[]string{"zzzz"}, "zzzz", "nmhd"},
+	}
+	for _, c := range cases {
+		for _, mediaType := range c.mediaTypes {
+			trak := mp4.CreateEmptyTrak(1, 1000, mediaType, "und")
+			if got := trak.Mdia.Hdlr.HandlerType; got != c.handlerType {
+				t.Errorf("%s: handler type %s, want %s", mediaType, got, c.handlerType)
+			}
+			if got := trak.Mdia.Minf.Children[0].Type(); got != c.mediaHeader {
+				t.Errorf("%s: media header %s, want %s", mediaType, got, c.mediaHeader)
+			}
+			wantVolume := mp4.Fixed16(0)
+			if c.handlerType == "soun" {
+				wantVolume = 0x0100
+			}
+			if got := trak.Tkhd.Volume; got != wantVolume {
+				t.Errorf("%s: tkhd volume %#x, want %#x", mediaType, got, wantVolume)
+			}
+		}
+	}
+}
+
+func createVideoAVCInitSegment() (*mp4.InitSegment, error) {
+	sps, _ := hex.DecodeString(avcSPSnalu)
+	spsNALUs := [][]byte{sps}
+	pps, _ := hex.DecodeString(avcPPSnalu)
+	ppsNALUs := [][]byte{pps}
+
+	videoTimescale := uint32(180000)
+	init := mp4.CreateEmptyInit()
+	init.AddEmptyTrack(videoTimescale, "video", "und")
+	trak := init.Moov.Trak
+	includePS := true
+	err := trak.SetAVCDescriptor("avc1", spsNALUs, ppsNALUs, includePS)
+	if err != nil {
+		return nil, err
+	}
+	width := trak.Mdia.Minf.Stbl.Stsd.AvcX.Width
+	height := trak.Mdia.Minf.Stbl.Stsd.AvcX.Height
+	if width != 1280 || height != 720 {
+		return nil, fmt.Errorf("got %dx%d instead of 1280x720", width, height)
+	}
+	return init, nil
+}
+
+func createVideoHEVCInitSegment() (*mp4.InitSegment, error) {
+	vps, _ := hex.DecodeString(hevcVPSnalu)
+	vpsNALUs := [][]byte{vps}
+	sps, _ := hex.DecodeString(hevcSPSnalu)
+	spsNALUs := [][]byte{sps}
+	pps, _ := hex.DecodeString(hevcPPSnalu)
+	ppsNALUs := [][]byte{pps}
+
+	videoTimescale := uint32(180000)
+	init := mp4.CreateEmptyInit()
+	init.AddEmptyTrack(videoTimescale, "video", "und")
+	trak := init.Moov.Trak
+	err := trak.SetHEVCDescriptor("hvc1", vpsNALUs, spsNALUs, ppsNALUs, nil, true)
+	if err != nil {
+		return nil, err
+	}
+	width := trak.Mdia.Minf.Stbl.Stsd.HvcX.Width
+	height := trak.Mdia.Minf.Stbl.Stsd.HvcX.Height
+	if width != 960 || height != 540 {
+		return nil, fmt.Errorf("got %dx%d instead of 960x540", width, height)
+	}
+	return init, nil
+}
+
+func createVideoMJpegInitSegment() (*mp4.InitSegment, error) {
+	videoTimescale := uint32(24000)
+	init := mp4.CreateEmptyInit()
+	init.AddEmptyTrack(videoTimescale, "video", "und")
+	trak := init.Moov.Trak
+	err := trak.SetMJpegDescriptor(400, 226, nil)
+	if err != nil {
+		return nil, err
+	}
+	stsd := trak.Mdia.Minf.Stbl.Stsd
+	if stsd.Mjpg == nil {
+		return nil, fmt.Errorf("no mjpg sample entry")
+	}
+	if stsd.Mjpg.JpgC != nil {
+		return nil, fmt.Errorf("got jpgC box, but no jpegPrefix was given")
+	}
+	width := stsd.Mjpg.Width
+	height := stsd.Mjpg.Height
+	if width != 400 || height != 226 {
+		return nil, fmt.Errorf("got %dx%d instead of 400x226", width, height)
+	}
+	jpegPrefix := []byte{0xff, 0xd8, 0xff, 0xdb}
+	init = mp4.CreateEmptyInit()
+	init.AddEmptyTrack(videoTimescale, "video", "und")
+	trak = init.Moov.Trak
+	err = trak.SetMJpegDescriptor(400, 226, jpegPrefix)
+	if err != nil {
+		return nil, err
+	}
+	jpgC := trak.Mdia.Minf.Stbl.Stsd.Mjpg.JpgC
+	if jpgC == nil {
+		return nil, fmt.Errorf("no jpgC box although jpegPrefix was given")
+	}
+	if !bytes.Equal(jpgC.JpegPrefix, jpegPrefix) {
+		return nil, fmt.Errorf("got jpegPrefix %v instead of %v", jpgC.JpegPrefix, jpegPrefix)
+	}
+	return init, nil
+}
+
+func createAudioAACInitSegment(timeScale uint32, objType byte) (*mp4.InitSegment, error) {
+	init := mp4.CreateEmptyInit()
+	trak := init.AddEmptyTrack(timeScale, "audio", "en")
+	err := trak.SetAACDescriptor(objType, int(timeScale))
+	if err != nil {
+		return nil, err
+	}
+	return init, nil
+}
+
+func createAudioAC3InitSegment() (*mp4.InitSegment, error) {
+	dac3Hex := "0000000b646163330c3dc0"
+	dac3Bytes, err := hex.DecodeString(dac3Hex)
+	if err != nil {
+		return nil, err
+	}
+	sr := bits.NewFixedSliceReader(dac3Bytes)
+	box, err := mp4.DecodeBoxSR(0, sr)
+	if err != nil {
+		return nil, err
+	}
+	dac3 := box.(*mp4.Dac3Box)
+	init := mp4.CreateEmptyInit()
+	samplingRate := mp4.AC3SampleRates[dac3.FSCod]
+	trak := init.AddEmptyTrack(uint32(samplingRate), "audio", "en")
+	err = trak.SetAC3Descriptor(dac3)
+	if err != nil {
+		return nil, err
+	}
+	return init, nil
+}
+
+func createAudioEC3InitSegment() (*mp4.InitSegment, error) {
+	dec3Hex := "0000000e646563330c00200f0202"
+	dec3Bytes, err := hex.DecodeString(dec3Hex)
+	if err != nil {
+		return nil, err
+	}
+	sr := bits.NewFixedSliceReader(dec3Bytes)
+	box, err := mp4.DecodeBoxSR(0, sr)
+	if err != nil {
+		return nil, err
+	}
+	dec3 := box.(*mp4.Dec3Box)
+	init := mp4.CreateEmptyInit()
+	samplingRate := mp4.AC3SampleRates[dec3.EC3Subs[0].FSCod]
+	trak := init.AddEmptyTrack(uint32(samplingRate), "audio", "en")
+	err = trak.SetEC3Descriptor(dec3)
+	if err != nil {
+		return nil, err
+	}
+	return init, err
+}
+
+func createSubtitlesWvttInitSegment() (*mp4.InitSegment, error) {
+	subtitleTimescale := 1000
+	init := mp4.CreateEmptyInit()
+	trak := init.AddEmptyTrack(uint32(subtitleTimescale), "wvtt", "en")
+	err := trak.SetWvttDescriptor("WEBVTT")
+	if err != nil {
+		return nil, err
+	}
+	return init, nil
+}
+
+func createSubtitlesStppInitSegment() (*mp4.InitSegment, error) {
+	subtitleTimescale := 1000
+	init := mp4.CreateEmptyInit()
+	trak := init.AddEmptyTrack(uint32(subtitleTimescale), "stpp", "en")
+	schemaLocation := ""
+	auxiliaryMimeType := ""
+	err := trak.SetStppDescriptor("http://www.w3.org/ns/ttml", schemaLocation, auxiliaryMimeType)
+	if err != nil {
+		return nil, err
+	}
+	return init, nil
+}
+
+func TestSetAACDescriptorWithChannelConfig(t *testing.T) {
+	cases := []struct {
+		desc                 string
+		objType              byte
+		channelConfiguration byte
+		wantChannelCount     uint16
+		wantErr              bool
+	}{
+		{"mono", aac.AAClc, 1, 1, false},
+		{"5.1", aac.AAClc, 6, 6, false},
+		{"7.1 front", aac.AAClc, 7, 8, false},
+		{"22.2", aac.AAClc, 13, 24, false},
+		{"HE-AACv1 5.1", aac.HEAACv1, 6, 6, false},
+		{"HE-AACv2 mono core", aac.HEAACv2, 1, 1, false},
+		{"HE-AACv2 stereo core", aac.HEAACv2, 2, 0, true},
+		{"layout in program config element", aac.AAClc, 0, 0, true},
+		{"reserved", aac.AAClc, 8, 0, true},
+	}
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			init := mp4.CreateEmptyInit()
+			trak := init.AddEmptyTrack(48000, "audio", "en")
+			err := trak.SetAACDescriptorWithChannelConfig(c.objType, c.channelConfiguration, 48000)
+			if c.wantErr {
+				if err == nil {
+					t.Error("expected an error")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			mp4a := trak.Mdia.Minf.Stbl.Stsd.Mp4a
+			if mp4a.ChannelCount != c.wantChannelCount {
+				t.Errorf("got channel count %d, want %d", mp4a.ChannelCount, c.wantChannelCount)
+			}
+			asc, err := aac.DecodeAudioSpecificConfig(bytes.NewReader(mp4a.Esds.DecConfigDescriptor.DecSpecificInfo.DecConfig))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if asc.ObjectType != c.objType || asc.ChannelConfiguration != c.channelConfiguration {
+				t.Errorf("got object type %d and channel configuration %d, want %d and %d",
+					asc.ObjectType, asc.ChannelConfiguration, c.objType, c.channelConfiguration)
+			}
+		})
+	}
+}
+
+// TestSetAACDescriptorChannels checks the stereo default of SetAACDescriptor, and the mono core of HE-AACv2.
+func TestSetAACDescriptorChannels(t *testing.T) {
+	for objType, want := range map[byte]uint16{aac.AAClc: 2, aac.HEAACv1: 2, aac.HEAACv2: 1} {
+		init := mp4.CreateEmptyInit()
+		trak := init.AddEmptyTrack(24000, "audio", "en")
+		if err := trak.SetAACDescriptor(objType, 24000); err != nil {
+			t.Fatal(err)
+		}
+		if got := trak.Mdia.Minf.Stbl.Stsd.Mp4a.ChannelCount; got != want {
+			t.Errorf("object type %d: got channel count %d, want %d", objType, got, want)
+		}
+	}
+}

@@ -1,0 +1,79 @@
+#!name=红果去广告（Egern 转小火箭版）
+#!desc=源自 bluee1111 的红果短剧/漫剧规则。保留广告拦截与 URL 重写；完整重写需小火箭本机证书。不能保证全部去广告或解锁剧集。
+#!author=bluee1111（原规则）；Codex（格式转换）
+#!homepage=https://github.com/bluee1111/egern-hongguo-adblock
+
+# Converted on 2026-10-31. Static snapshot; no automatic update URL.
+# Source: https://github.com/bluee1111/egern-hongguo-adblock/blob/54412489b99934abf4652ee7729cb3e1bdaf3528/hongguo-adblock.yaml
+# Compatibility: six domain regexes are approximated by ten documented * / ? wildcards.
+# Numeric character classes become wildcards, so the matching scope is slightly broader.
+# No reading-video blocking rule has been added.
+# Uses the active configuration certificate; contains no CA certificate or private key.
+# HTTPS URL rewriting requires MITM. Domain filtering is independent of MITM.
+# Cannot simulate rewarded-ad completion or server-side unlocking.
+
+[Rule]
+# Original domain_suffix: pangolin-sdk-toutiao.com
+DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
+# Original domain_suffix: pangolin-sdk-toutiao1.com
+DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
+# Original domain_suffix: pglstatp-toutiao.com
+DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
+# Original domain_suffix: pangle.io
+DOMAIN-SUFFIX,pangle.io,REJECT
+# Original domain_regex: ^ads[0-9]*-normal(?:-[a-z0-9]+)?\.zijieapi\.com$
+DOMAIN-WILDCARD,ads*-normal.zijieapi.com,REJECT
+DOMAIN-WILDCARD,ads*-normal-?*.zijieapi.com,REJECT
+# Original domain_regex: ^p[0-9]+-ad-sign\.byteimg\.com$
+DOMAIN-WILDCARD,p?*-ad-sign.byteimg.com,REJECT
+# Original domain_regex: ^p[0-9]+-developer-sign\.bytemaimg\.com$
+DOMAIN-WILDCARD,p?*-developer-sign.bytemaimg.com,REJECT
+# Original domain_regex: ^(?:ecom[0-9]*-normal|ec[0-9]*-core|isaas[0-9]*-normal)-lq\.ecombdapi\.com$
+DOMAIN-WILDCARD,ecom*-normal-lq.ecombdapi.com,REJECT
+DOMAIN-WILDCARD,ec*-core-lq.ecombdapi.com,REJECT
+DOMAIN-WILDCARD,isaas*-normal-lq.ecombdapi.com,REJECT
+# Original domain_regex: ^v[0-9]+-(?:(?:bd|se|se-sjy)-daily-)?reading-ad\.qznovelvod\.com$
+DOMAIN-WILDCARD,v?*-reading-ad.qznovelvod.com,REJECT
+# Original domain_suffix: praisewindow.ugsdk.cn
+DOMAIN-SUFFIX,praisewindow.ugsdk.cn,REJECT
+# Original domain: praisewindow-sinfonlinea.ugsdk.cn
+DOMAIN,praisewindow-sinfonlinea.ugsdk.cn,REJECT
+# Original domain: zlink.ugsdk.cn
+DOMAIN,zlink.ugsdk.cn,REJECT
+# Original domain_regex: ^minigame[0-9]*-normal(?:-[a-z0-9]+)?\.zijieapi\.com$
+DOMAIN-WILDCARD,minigame*-normal.zijieapi.com,REJECT
+DOMAIN-WILDCARD,minigame*-normal-?*.zijieapi.com,REJECT
+# Original domain: www.chengzijianzhan.com
+DOMAIN,www.chengzijianzhan.com,REJECT
+
+[URL Rewrite]
+^https?://[^/]*\.pangolin-sdk-toutiao(?:1)?\.com/api/ad/union/sdk/(?:get_ads|stats|settings)/ - reject-dict
+^https?://[^/]*\.(?:pglstatp-toutiao|pstatp)\.com/(?:obj|img)/(?:ad-app-package|ad|ad-pattern)/ - reject-video
+^https?://[^/]*\.snssdk\.com/api/ad/ - reject-dict
+
+[MITM]
+hostname = %APPEND% *.pangolin-sdk-toutiao.com, *.pangolin-sdk-toutiao1.com, *.pglstatp-toutiao.com, *.pstatp.com, *.snssdk.com
+
+# Original MIT license (retained in full):
+# MIT License
+# 
+# Copyright (c) 2026 bluee1111
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
