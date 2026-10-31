@@ -1,108 +1,53 @@
-# honguo-diance-quguanggao
+# 红果-店策-去广告
 
-个人 Android / iOS 短剧客户端。使用 React Native + Expo，原生数据接入由公开 Go 源码构建。应用不集成广告 SDK；收藏、进度、偏好和自备片单保存在本机。
+红果-店策-去广告是一个为安卓和 iPhone 开发的开源短剧播放器。想看的剧可以搜索、收藏，没看完的下次接着看。播放器本身不展示广告，收藏和观看进度保存在自己的手机里。
 
-这是 **0.1.0 预览版**，与红果官方无关联。它不是官方 App 的源码公开，也不代表已经合并了互联网上所有相关项目。已调查的 12 个代表项目、准确提交、许可和可复用范围见 [来源审计](docs/SOURCES.md)。
+这里也提供 **红果短剧／红果漫剧的小火箭去广告模块**，方便想继续使用官方 App 的 iPhone 用户单独使用。
 
-## 已实现
+**目前是 0.1.0 开发预览版。** 客户端仍在测试，暂未经过苹果、安卓真机验证。它与红果官方无关联；部分剧集可能无法播放，也不能保证去除所有广告。iPhone 客户端需要 Apple 签名，暂时不能像 App Store 软件那样点开就装。
 
-- Android / iOS 共用的发现、搜索、作品详情、分组选集和播放器界面。
-- 红果非官方接口的分类浏览、搜索、联想、目录和播放响应适配；保留限流、授权、接口变化和内容不可用等真实错误。
-- Go 源码实现的有限标准 CENC MP4 处理与带随机令牌的本机播放服务，支持已实现容器的 Range / HEAD；每集输入／输出各限制为 64 MiB，总进程内存会更高。不支持的容器和服务端拒绝仍返回错误；合成媒体测试不等于真实剧集已验收。
-- 本机收藏、每部作品续播进度、观看历史与删除；来源不同的同名标识互不覆盖。
-- 原生播放控件、快进后退、倍速、自动下一集、全屏、画中画配置与清屏观看。
-- 明确授权的 HTTPS MP4 缓存队列，最多两项同时下载；暂停、会话内继续、删除和本地播放。重新启动后保留任务资料，手动继续会重新取得地址。
-- JSON 自备片单导入、分页和搜索，目录导出，以及版本化资料备份／合并恢复。备份不包含视频、设备身份或播放密钥。
-- 浅色、深色和跟随系统外观，安全区、可读文本、触控区域和无障碍标签。
-- 明确标注为非红果内容的 Blender CC BY 3.0 预告片，用来独立验证播放器与本机功能。
+## 可以做什么
 
-详细完成状态和未实现项见 [功能对照](docs/FEATURES.md)。错误信息不会被替换为虚构剧目或成功状态。
+- **找剧、选集：** 按分类浏览，搜索剧名，选择想看的那一集。
+- **按自己的习惯看：** 调整倍速、快进后退、全屏观看，也可以开启自动下一集。
+- **收藏和续播：** 保存喜欢的作品，查看观看历史，回来继续上次的进度。
+- **保存自己的片单：** 添加自己的影片，备份收藏和观看记录。来源允许下载的视频可以缓存到手机。
+- **换个舒服的外观：** 支持深色、浅色，也可以跟随手机系统。
 
-## iPhone 原版 App 的小火箭模块
+这些功能已写入项目；实际播放和缓存效果仍需要在手机上测试。片库连接、剧集权限和内容变化可能影响使用。项目不提供付费内容解锁功能。
 
-仓库也收录了你指定的 **红果短剧／红果漫剧 Shadowrocket 去广告模块**，与独立双端客户端分别使用：
+## iPhone：继续用官方 App，先看这里
 
-- [模块文件](extensions/shadowrocket/hongguo-shadowrocket.sgmodule)
-- [完整可复制文本](extensions/shadowrocket/hongguo-shadowrocket-copy.txt)
-- [安装、订阅与限制说明](extensions/shadowrocket/README.md)
+如果你已经有小火箭（Shadowrocket），可以单独使用去广告模块，不需要安装本项目的播放器。
 
-该模块复用 MIT 许可的 Egern 红果规则并转换为 Shadowrocket 语法，保留原作者署名。完整 HTTPS 重写需要小火箭生成并信任的本机证书；域名拦截不依赖 HTTPS 解密。部分规则在通配符语法中有有限范围扩展，不能保证去除全部广告，也不能伪造看完激励广告的解锁结果。仓库不提供任何证书私钥。
+1. 打开 [小火箭模块安装说明](extensions/shadowrocket/README.md)。
+2. 按说明把模块地址加入小火箭并启用。
+3. 完全退出红果短剧或红果漫剧，再重新打开测试。
 
-## 在电脑预览
+[打开模块地址](https://raw.githubusercontent.com/3132882323-cyber/honguo-diance-quguanggao/main/extensions/shadowrocket/hongguo-shadowrocket.sgmodule) · [打开可复制文本](extensions/shadowrocket/hongguo-shadowrocket-copy.txt)
 
-需要 Node.js 22.13+ 和本仓库 `packageManager` 指定的 pnpm：
+部分拦截功能需要在小火箭里安装并信任你自己生成的证书，步骤见安装说明。模块尚未经过真实 iPhone 测试；它不能替你完成“看广告解锁”，也不能保证清除全部广告。如果出现播放或网络异常，先关闭模块再试。
 
-```sh
-pnpm install --frozen-lockfile --ignore-scripts
-pnpm run start:web
-```
+## 安卓和 iPhone：使用独立播放器
 
-浏览器打开终端显示的地址。**网页和 Expo Go 不包含红果原生数据模块**；请选择「打开公开样片」，或在设置中导入自己的 JSON 片单。红果接入需要下面的完整设备构建。
+客户端目前处于开发测试阶段，**尚无经过真机验证的正式安装版**。可下载的预览包和更新说明会放在 [下载与版本页面](https://github.com/3132882323-cyber/honguo-diance-quguanggao/releases)，实际检查结果见 [验证记录](docs/VERIFICATION.md)。
 
-## 构建 Android / iOS
+苹果手机需要 Apple 签名才能安装。标有“未签名”或“模拟器”的文件不能直接安装到你的 iPhone。
 
-原生业务核心的 Go、Kotlin、Swift 和 JS 源码均随仓库提供。没有依赖作者私下分发的 `.so`、`.jar` 或 `.xcframework`；生成的绑定文件不提交到 Git。
+打开播放器后，可以在顶部切换片源。红果片库暂时连不上时，可选择“公开样片”体验播放、收藏和续播。样片是公开影片预告片，不是红果剧集。
 
-```sh
-# 安装本机原生工具链后，先从 Go 源码生成对应绑定
-node modules/hongguo-source/scripts/build.mjs android
-pnpm exec expo prebuild --platform android --non-interactive
-pnpm run android
+## 我的资料存在哪里
 
-# iOS 需要 macOS、Xcode 和 CocoaPods
-node modules/hongguo-source/scripts/build.mjs ios
-pnpm exec expo prebuild --platform ios --non-interactive
-pnpm run ios
-```
+收藏、观看进度、偏好和自己导入的片单都保存在本机，本项目不提供账号云同步。换手机或卸载前，请到“设置 → 本机资料”导出备份。备份包含片单资料，不包含已下载的视频。
 
-准确的工具链版本、GitHub Actions 手动构建、APK 签名与 iOS 签名要求见 [构建说明](docs/BUILD.md)。未签名的 iOS 设备包和模拟器应用都不能直接安装到普通 iPhone；设备分发需要自己的 Apple 签名配置。项目不包含证书或私钥。
+## 使用中遇到问题
 
-## 验证
+可以到 [问题反馈](https://github.com/3132882323-cyber/honguo-diance-quguanggao/issues) 描述发生了什么，并附上手机型号、系统版本和错误提示。请不要上传账号密码、验证码或个人证书。
 
-```sh
-pnpm run typecheck
-pnpm test
-pnpm run export:all
-```
+## 开源与致谢
 
-数据和接口测试使用合成响应与本地存储；测试不会自动注册大量匿名身份、抓取红果剧集或把上游接口可用性冒充为播放器验收。原生桥接和媒体处理另有 Go 测试，见模块说明。
+播放器原创代码采用 [Apache-2.0](LICENSE) 许可。红果接入参考并复用了 [openhongguo](https://github.com/beilunyang/openhongguo)；小火箭模块由 [bluee1111 的红果规则](https://github.com/bluee1111/egern-hongguo-adblock) 转换而来，保留 MIT 许可和原作者署名。上游各自的许可与使用声明仍然适用。
 
-已执行的检查、失败修复、原生构建及真机验收边界记录在 [验证记录](docs/VERIFICATION.md)。三平台 JS 导出成功不等于 APK／IPA 编译成功，CI 成功也不等于真机长时间播放已验收。
+本项目公开的是自己的客户端和可复用的相关代码，并不是红果官方 App 的源码，也没有包含网上所有相关项目。
 
-## 自备片单
-
-在「设置 → 片源与目录」中选择 JSON 文件或粘贴：
-
-```json
-{
-  "version": 1,
-  "id": "my-library",
-  "name": "我的片单",
-  "dramas": [{
-    "id": "my-film",
-    "title": "我的影片",
-    "description": "自己有权播放和分享的内容",
-    "tags": ["我的作品"],
-    "episodes": [{
-      "id": "episode-1",
-      "title": "第一集",
-      "url": "https://your-media-host.example/episode-1.mp4",
-      "mimeType": "video/mp4",
-      "downloadable": true
-    }]
-  }]
-}
-```
-
-示例域名只是格式说明，导入前必须换成自己的真实地址。`downloadable` 默认为不允许；仅在内容允许下载时设置为 `true`。目录中的执行脚本、文件地址、嵌入账号密码、重复标识和不支持的版本会被拒绝。
-
-## 来源与许可
-
-原创代码按 [Apache-2.0](LICENSE) 发布。
-
-- 数据协议复用 [beilunyang/openhongguo](https://github.com/beilunyang/openhongguo)，固定完整提交，保留上游 LICENSE、NOTICE、README 与来源记录。上游 README 同时包含研究／非商业用途声明，本项目未删除这些文字，也没有代替作者授予额外权利。
-- 第三方依赖的原有许可单独保留，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和锁文件。
-- 开放预告片分别来自 Blender Foundation 的 [Big Buck Bunny](https://peach.blender.org/about/) 与 [Sintel](https://durian.blender.org/sharing/)，通过 W3C 的 HTTPS 地址播放，未冒充红果片源。
-- 无许可的现成客户端、明确闭源的原生核心和官方账号凭据没有复制进入本项目。
-
-应用本身不展示广告，不等于能移除所有片源内嵌宣传。服务端授权、地区、频率和内容格式也可能限制播放；不承诺所有剧集可用。
+想查看代码或参与改进，可阅读 [构建说明](docs/BUILD.md)、[功能明细与自备片单格式](docs/FEATURES.md)、[参考项目与许可](docs/SOURCES.md) 和 [完整第三方声明](THIRD_PARTY_NOTICES.md)。
