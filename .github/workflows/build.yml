@@ -67,7 +67,7 @@ jobs:
         uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
       - name: Install Android platform and NDK
         run: |
-          sdkmanager --install 'platforms;android-37' 'ndk;27.2.12479018'
+          sdkmanager --channel=3 --install 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;27.2.12479018'
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> "$GITHUB_ENV"
       - name: Install pnpm
