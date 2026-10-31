@@ -1,6 +1,6 @@
 # 从源码构建
 
-应用名和工程名均为 `honguo-diance-quguanggao`。本工程使用 Expo SDK 58、React Native 0.88、一个位于 `modules/hongguo-source` 的本地 Expo 原生模块，以及随源码提供的 Go 核心。原生模块不能在 Expo Go 中运行；请构建本工程自己的应用。
+安装后显示名称为「红果-店策-去广告」，仓库名和 Expo slug 为 `honguo-diance-quguanggao`。本工程使用 Expo SDK 58、React Native 0.88、一个位于 `modules/hongguo-source` 的本地 Expo 原生模块，以及随源码提供的 Go 核心。原生模块不能在 Expo Go 中运行；请构建本工程自己的应用。
 
 ## 工具与依赖
 

@@ -207,7 +207,7 @@ function HonguoApp() {
     <View style={[styles.frame, { maxWidth: 1160 }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.brand}><View style={[styles.brandIcon, { backgroundColor: colors.action }]}><Icon name="play" colors={colors} color={colors.onAction} size={21} /></View>
-          <View><Text style={[styles.brandTitle, { color: colors.text }]}>HONGUO</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>你的私人片单</Text></View></View>
+          <View><Text style={[styles.brandTitle, { color: colors.text }]}>{displayName}</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>你的私人片单</Text></View></View>
         <Pressable onPress={() => present({ kind: 'sources' })} accessibilityRole="button" accessibilityLabel={`当前片源：${provider.name}，点击切换`}
           style={({ pressed }) => [styles.sourceButton, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 }]}>
           <View style={[styles.sourceDot, { backgroundColor: colors.accent }]} /><Text numberOfLines={1} style={{ color: colors.text, fontSize: 12, flexShrink: 1 }}>{provider.name}</Text><Icon name="chevron-down" colors={colors} size={14} />
@@ -278,7 +278,7 @@ function HonguoApp() {
             closeOverlay();
           }} />}
           {overlay?.kind === 'about' && <ScrollView contentContainerStyle={[styles.scroll, { gap: 22, maxWidth: 760, alignSelf: 'center', width: '100%' }]}>
-            <Text style={[styles.pageTitle, { color: colors.text }]}>找剧、收藏，下次接着看。</Text>
+            <Text style={[styles.pageTitle, { color: colors.text }]}>{'找剧、收藏，\n下次接着看。'}</Text>
             <Text style={[styles.description, { color: colors.muted }]}>这是一个为安卓和 iPhone 开发的开源短剧播放器。可以搜索作品、选择集数、调整倍速，把喜欢的剧加入片单。播放器本身不展示广告。</Text>
             <SettingsCard title="使用前先知道" colors={colors}>
               <Text style={[styles.description, { color: colors.muted }]}>当前版本还在测试，暂未经过苹果、安卓真机验证。部分剧集可能因片源限制无法播放，也不支持付费内容解锁。允许下载的视频可以缓存到手机。</Text>

@@ -12,7 +12,9 @@
 | `pnpm export:all` | Web、iOS、Android JS bundle 均成功导出；将 Metro worker 限制为 1，避免此 Windows 环境先前的内存错误。 |
 | `pnpm typecheck` | 当前应用与测试代码检查通过。 |
 | `actionlint@v1.7.12 .github/workflows/build.yml` | 工作流静态检查通过。 |
-| Go 核心测试 | 原生模块开发流程在本地 Go 1.27.3 下报告 9/9 通过；仍需在 Android/iOS CI 中实际编译链接。 |
-| Android APK、iOS `.app`、未签名设备 `.ipa` | 未在本机生成：缺少 Go、JDK、Android SDK/NDK；Windows 也没有 Xcode。CI 工作流尚未在 GitHub 运行。 |
+| Go 核心测试 | 原生模块开发流程在本地 Go 1.27.3 下报告 9/9 通过；随后 CI 在 Android 和 iOS 构建中从源码生成并链接核心。 |
+| [CI run 41187592053](https://github.com/3132882323-cyber/honguo-diance-quguanggao/actions/runs/41187592053) | 提交 `9902e80` 的 `verify`、Android、iOS 作业全部通过；构建并上传源码包、Android 预览 APK（44,612,101 字节）、iOS 模拟器应用 ZIP（24,849,022 字节）及未签名 iOS 真机 IPA（12,312,021 字节）。IPA 仅供构建检查，不能直接安装到 iPhone。 |
+| 浏览器预览 | 主开发流程通过 Expo serve 运行生产 Web bundle：样片播放约 13 秒，1.5 倍速可用，收藏刷新后保留；`readyToPlay` 修复后记录约 13 秒进度。搜索 Sintel 返回 1 项，示例 JSON 导入成功，浅色/深色外观可切。375×812 和横屏 812×375 视口均未见水平溢出。Seek 曾因网络失败，未完成验收。 |
+| 真机与在线红果 | 尚未在 Android/iOS 真机验证，也未完成在线红果服务端到端验收。浏览器样片结果不代表这些场景。 |
 
-本表区分静态检查、JS 导出与真正的原生构建。CI 构建脚本已经配置，但在获取到实际运行结果前，不能把 APK 或 iOS `.app` 标记为已验证。
+CI 产物来自提交 `9902e80`；之后的首页标题和文案调整，以及本次系统显示名称调整，仍需在最新提交重新构建才能反映到安装包中。构建成功说明原生工程可编译，不等同于真机播放或在线红果服务已通过验收。
