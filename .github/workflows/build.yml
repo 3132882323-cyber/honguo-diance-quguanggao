@@ -1,0 +1,164 @@
+name: Build from source
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CI: '1'
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Install pnpm
+        run: npm install --global pnpm@11.25.0
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Check Expo dependencies
+        run: pnpm run doctor
+      - name: Export JavaScript bundles
+        run: pnpm export:all
+      - name: Package complete source
+        run: pnpm package:source "$RUNNER_TEMP/honguo-diance-quguanggao-source.tar.gz"
+      - name: Upload source archive
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: honguo-diance-quguanggao-source
+          path: ${{ runner.temp }}/honguo-diance-quguanggao-source.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  android:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+      - name: Install Android platform and NDK
+        run: |
+          sdkmanager --install 'platforms;android-37' 'ndk;27.2.12479018'
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> "$GITHUB_ENV"
+      - name: Install pnpm
+        run: npm install --global pnpm@11.25.0
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build Go native core from source
+        run: pnpm native:prepare:android
+      - name: Generate Android project
+        run: pnpm exec expo prebuild --platform android --no-install
+      - name: Build standalone preview APK
+        working-directory: android
+        run: ./gradlew :app:assembleRelease --no-daemon
+      - name: Upload Android APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: honguo-diance-quguanggao-android-preview-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  ios-simulator:
+    needs: verify
+    runs-on: macos-26-intel
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Install pnpm
+        run: npm install --global pnpm@11.25.0
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build Go native core from source
+        run: pnpm native:prepare:ios
+      - name: Generate iOS project
+        run: pnpm exec expo prebuild --platform ios --no-install
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+      - name: Build unsigned iOS Simulator app
+        run: |
+          set -euo pipefail
+          workspaces=(ios/*.xcworkspace)
+          test -d "${workspaces[0]}"
+          workspace=${workspaces[0]}
+          scheme=$(basename "$workspace" .xcworkspace)
+          xcodebuild -workspace "$workspace" -scheme "$scheme" \
+            -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/derived-data" \
+            CODE_SIGNING_ALLOWED=NO build
+          apps=("$RUNNER_TEMP"/derived-data/Build/Products/Release-iphonesimulator/*.app)
+          test -d "${apps[0]}"
+          ditto -c -k --keepParent "${apps[0]}" "$RUNNER_TEMP/honguo-diance-quguanggao-ios-simulator.app.zip"
+      - name: Upload unsigned simulator app
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: honguo-diance-quguanggao-ios-simulator
+          path: ${{ runner.temp }}/honguo-diance-quguanggao-ios-simulator.app.zip
+          if-no-files-found: error
+          retention-days: 14
+      - name: Build unsigned iOS device app
+        run: |
+          set -euo pipefail
+          workspaces=(ios/*.xcworkspace)
+          test -d "${workspaces[0]}"
+          workspace=${workspaces[0]}
+          scheme=$(basename "$workspace" .xcworkspace)
+          xcodebuild -workspace "$workspace" -scheme "$scheme" \
+            -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/derived-device" \
+            CODE_SIGNING_ALLOWED=NO build
+          apps=("$RUNNER_TEMP"/derived-device/Build/Products/Release-iphoneos/*.app)
+          test -d "${apps[0]}"
+          mkdir -p "$RUNNER_TEMP/unsigned-device/Payload"
+          ditto "${apps[0]}" "$RUNNER_TEMP/unsigned-device/Payload/$(basename "${apps[0]}")"
+          (cd "$RUNNER_TEMP/unsigned-device" && zip -qry "$RUNNER_TEMP/honguo-diance-quguanggao-ios-device-unsigned.ipa" Payload)
+      - name: Upload unsigned device IPA for inspection
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: honguo-diance-quguanggao-ios-device-unsigned
+          path: ${{ runner.temp }}/honguo-diance-quguanggao-ios-device-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
