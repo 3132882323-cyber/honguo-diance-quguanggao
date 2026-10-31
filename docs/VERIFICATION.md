@@ -11,6 +11,8 @@
 | `pnpm test` | 31 项数据层、提供方和 Shadowrocket 扩展测试通过。 |
 | `pnpm export:all` | Web、iOS、Android JS bundle 均成功导出；将 Metro worker 限制为 1，避免此 Windows 环境先前的内存错误。 |
 | `pnpm typecheck` | 当前应用与测试代码检查通过。 |
+| `actionlint@v1.7.12 .github/workflows/build.yml` | 工作流静态检查通过。 |
+| Go 核心测试 | 原生模块开发流程在本地 Go 1.27.3 下报告 9/9 通过；仍需在 Android/iOS CI 中实际编译链接。 |
 | Android APK、iOS `.app`、未签名设备 `.ipa` | 未在本机生成：缺少 Go、JDK、Android SDK/NDK；Windows 也没有 Xcode。CI 工作流尚未在 GitHub 运行。 |
 
 本表区分静态检查、JS 导出与真正的原生构建。CI 构建脚本已经配置，但在获取到实际运行结果前，不能把 APK 或 iOS `.app` 标记为已验证。

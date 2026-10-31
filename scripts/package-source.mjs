@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = resolve(process.argv[2] ?? resolve(projectRoot, '..', 'honguo-diance-quguanggao-source.tar.gz'));
-const prefix = `${projectRoot}/`;
-if (output === projectRoot || output.startsWith(prefix)) {
+const outputRelativeToProject = relative(projectRoot, output);
+if (!outputRelativeToProject || (!outputRelativeToProject.startsWith('..') && !isAbsolute(outputRelativeToProject))) {
   throw new Error('The source archive must be written outside the project directory.');
 }
 
@@ -16,7 +16,7 @@ for (const path of required) {
 }
 
 const candidates = [
-  '.github', '.gitignore', 'App.tsx', 'LICENSE', 'README.md',
+  '.github', '.gitattributes', '.gitignore', 'App.tsx', 'LICENSE', 'README.md',
   'CONTRIBUTING.md', 'THIRD_PARTY_NOTICES.md', 'app.json',
   'babel.config.js', 'metro.config.js', 'index.ts', 'package.json',
   'pnpm-lock.yaml', 'tsconfig.json', 'assets', 'docs', 'modules', 'src',
