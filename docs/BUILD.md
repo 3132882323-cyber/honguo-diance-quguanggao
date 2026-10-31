@@ -5,7 +5,7 @@
 ## 工具与依赖
 
 - 所有平台：Node.js 24、pnpm 11.25.0、Go 1.26.0 或更新版本。CI 固定使用 Go 1.27.3。
-- Android：JDK 17、Android SDK Platform 37、Android NDK 27.2.12479018；设置 `ANDROID_HOME` 和 `ANDROID_NDK_HOME`。
+- Android：JDK 17、Android SDK Platform 37.0 预览包、Build-Tools 37.0.0、Android NDK 27.2.12479018；设置 `ANDROID_HOME` 和 `ANDROID_NDK_HOME`。Android 17 仍处于预览阶段，命令行安装需使用 `sdkmanager --channel=3` 和包名 `platforms;android-37.0`。
 - iOS：macOS、Xcode 26.4 或兼容更新版本、CocoaPods。Windows 无法编译 iOS 应用。
 
 在项目根目录先执行：

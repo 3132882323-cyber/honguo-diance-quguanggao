@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "expo start --dev-client",
-    "start:web": "expo start --web",
+    "start:web": "expo start --web --max-workers 1",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
@@ -50,6 +50,7 @@
   "devDependencies": {
     "@types/node": "^24.19.2",
     "@types/react": "~19.3.0",
+    "babel-preset-expo": "~58.0.22",
     "expo-doctor": "^1.18.0",
     "tsx": "^4.20.6",
     "typescript": "~6.0.3"
