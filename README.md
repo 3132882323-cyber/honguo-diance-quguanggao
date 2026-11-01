@@ -30,7 +30,13 @@
 
 ## 安卓和 iPhone：使用独立播放器
 
-客户端目前处于开发测试阶段，**尚无经过真机验证的正式安装版**。可下载的预览包和更新说明会放在 [下载与版本页面](https://github.com/3132882323-cyber/honguo-diance-quguanggao/releases)，实际检查结果见 [验证记录](docs/VERIFICATION.md)。
+目前提供 **0.1.0 开发预览包**，尚未经过苹果、安卓真机验证：
+
+- 安卓：[下载 APK 预览包](https://github.com/3132882323-cyber/honguo-diance-quguanggao/releases/download/v0.1.0-preview/honguo-diance-quguanggao-v0.1.0-preview.apk)。
+- iPhone：[下载未签名文件](https://github.com/3132882323-cyber/honguo-diance-quguanggao/releases/download/v0.1.0-preview/honguo-diance-quguanggao-v0.1.0-ios-unsigned.ipa)，需要 Apple 签名后才能安装。
+- 查看所有文件和更新说明：[下载与版本页面](https://github.com/3132882323-cyber/honguo-diance-quguanggao/releases/tag/v0.1.0-preview)。
+
+构建和功能检查的具体结果见 [验证记录](docs/VERIFICATION.md)。
 
 苹果手机需要 Apple 签名才能安装。标有“未签名”或“模拟器”的文件不能直接安装到你的 iPhone。
 
